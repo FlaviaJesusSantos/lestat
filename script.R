@@ -252,67 +252,42 @@ writexl::write_xlsx(quinze_dezenove, "quinze_dezenove.xlsx")
 quinze_dezenove <- readxl::read_xlsx("quinze_dezenove.xlsx")
 
 ##------------------------------------------------------------------------------
-dados_teste <- readxl::read_xls("dados_teste.xls")
+dados <- dados %>%
+  separate(`Macrorregião de Saúde`, c("regiao", "macrorregiao")) %>%
+  mutate(
+    regiao = case_when(
+      regiao = 1101 & regiao <= 1702 ~ "Norte",
+      regiao = 2109 & regiao <= 2918 ~ "Nordeste",
+      regiao = 3101 & regiao <= 3534 ~ "Sudeste",
+      regiao = 4105 & regiao <= 4314 ~ "Sul",
+      regiao = 5005 & regiao <= 5305 ~ "Centro")) %>%
+  select(-macrorregiao) %>%
+  rename(c("menor1" = "menor que 1", "1_4anos" = "1-4 anos",
+           "5_9anos" = "5-9 anos", "10_14anos" = "10-14 anos",
+           "15_19anos" = "15-19 anos"))
 
-dados <- rename(dados, c("regiao" = "Macrorregião de Saúde"))
-
-dados <- readxl::read_xlsx("flavia.xlsx")
-
+dados$ano <- as.numeric(dados$ano)
 
 c <- dados %>%
-  group_by("menor que 1", "1-4 anos", "5-9 anos", "10-14 anos", "15-19 anos") %>%
-  gather("menor que 1", "1-4 anos", "5-9 anos", "10-14 anos", "15-19 anos",
-         key = "idade", value = "cases") 
+  pivot_longer(!(c(regiao, ano)), names_to = "income", values_to = "count")
 
-d <- c %>%
-  group_by(idade, cases) %>%
-  summarise(
-    n = n()
-  )
-
-ggplot(d, aes(x=idade)) +
-  geom_bar()
-  
-dados <- dados %>%
-  rename(c("menor1" = "menor que 1", "um_quatro" = "1-4 anos", "cinco_nove" = "5-9 anos",
-           "dez_quatorze" = "10-14 anos", "quinze_dezenove" = "15-19 anos"))
-
-t <- dados %>%
-  separate(regiao, into = c("n", "regiao"))
+teste <- dados %>%
+  select(c(ano, menor1))
 
 
-dados$menor1 <- as.numeric(dados$menor1)
-dados$um_quatro <- as.numeric(dados$um_quatro)
-dados$cinco_nove <- as.numeric(dados$cinco_nove)
-dados$dez_quatorze <- as.numeric(dados$dez_quatorze)
-dados$quinze_dezenove <- as.numeric(dados$quinze_dezenove)
-
-dados3 <- mutate(dados, soma = dados$`menor1`+dados$`1_4`+ dados$`5_9`+
-                 dados$`10_14`+dados$`15_19`)
-
-dados_anos$ano <- as.numeric(dados_anos$ano)
-
-dados_anos <- dados3 %>%
-  group_by(ano) %>%
-  summarise(casos = sum(soma))
 
 
-ggplot(anos_casos, aes(x=Anos, y=Casos)) +
-  geom_bar(stat = "identity") +
-  theme_minimal() +
-  geom_text(aes(label = Casos, vjust = -0.5)) +
-  scale_y_continuous(
-    limits = c(0, 6000),
-    breaks = seq(0, 6000, 500)
-  ) +
-  scale_fill_continuous()
 
-anos_casos <- data.frame(Anos = c("1996-2000", "2001-2005", "2006-2010", "2011-2015", "2016-2020"),
-                         Casos = c(4763,4901,4851,4627,4188),
-                         stringsAsFactor=FALSE)
 
-dados<- mutate(dados, soma = dados$menor1+dados$um_quatro+ dados$cinco_nove+
-                 dados$dez_quatorze+dados$quinze_dezenove)
+
+
+
+
+
+
+
+
+
 
 
 
